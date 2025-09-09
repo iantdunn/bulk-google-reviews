@@ -1,6 +1,6 @@
 # Bulk Google Reviews
 
-Highly configurable utility to scrape the most recent Google Maps reviews in bulk.
+Highly configurable utility to scrape the recent Google Maps reviews in bulk.
 
 ## Features
 
@@ -19,15 +19,14 @@ python main.py
 ```
 
 - Walks the current directory that the repository is placed in to find projects containing the configured reviews subpath and URL file.
+  - Placing a single `reviews/url.txt` in this repo will act as its own project.
 - For each match, scrapes the most recent reviews and writes/updates that project's `output.json`.
-- With the `--git` flag, automatically commits and pushes changes to any git repositories found.
-- If you only place a single `reviews/url.txt` in this repo, it will behave like a single-project run.
+  - With the `--git` flag, automatically commits and pushes changes to any git repositories found.
 
 ### Installation
 
 - Install the latest version of Google Chrome.
 - Install Python packages from `requirements.txt` (Python 3.9 is required).
-
 
 ### Adding URLs
 
@@ -38,20 +37,19 @@ python main.py
 ### Git Integration
 
 When using the `--git` flag, the scraper will:
-- Check if each project directory is a git repository
-- Add the updated `output.json` files to the staging area
-- Commit changes with a timestamped message
-- Push commits to the remote repository
 
-This is useful for automatically updating review data across multiple project repositories.
+- Check if each project directory is a git repository
+- Add, commit, and push the updated `output.json` file on a per-project basis
+
+This is useful for automatically updating review data across multiple project repositories without backend infrastructure.
 
 ## Project layout and conventions
 
 Each project you want to scrape should contain a “reviews area” with a text file holding the target Google Maps URL.
 
-- Reviews directory (default): `reviews`
-- URL file (default): `url.txt`
-- Output file (per project): `output.json`
+- Default reviews directory: `reviews`
+- Default URL file: `url.txt`
+- Default output file : `output.json`
 
 Example structure:
 
@@ -68,8 +66,6 @@ root/
       url.txt
       output.json
 ```
-
-You can change the reviews folder name and URL filename. See the “Configuration” section below.
 
 ## CLI reference
 
