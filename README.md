@@ -1,4 +1,4 @@
-# Google Maps Bulk Reviews Scraper
+# Bulk Google Reviews
 
 Scrapes the most recent Google Maps reviews in bulk. Point it at a root folder, and it will discover projects, read a Google Maps reviews URL from each project, and write out a fresh `output.json` per project.
 
