@@ -1,21 +1,49 @@
 # Bulk Google Reviews
 
-Highly configurable utility to scrape the most recent Google Maps reviews in bulk. Point it at a root folder, and it will discover projects, read a Google Maps reviews URL from each project, and write out a fresh `output.json` per project.
-
-## TODO
-- Git commit/push for detected repos
+Highly configurable utility to scrape the most recent Google Maps reviews in bulk.
 
 ## Features
 
-- Bulk discovery: Scans surrounding directories to find projects in need of review scraping.
-- Configurable layout: Supports a customizable reviews folder input URL filename, and output filename.
-- Per-project runs: Reads one URL per project and writes `output.json` alongside it.
-- Adjusts any dates less than a week ago to read "less than a week ago" for flexibility.
+- **Bulk discovery**: Scans surrounding directories to find projects in need of review scraping.
+- **Configurable layout**: Supports customizable reviews folder, input URL filename, and output filename.
+- **Per-project runs**: Reads one URL per project and writes `output.json` alongside it.
+- **Git integration**: Automatically add, commit, and push generated output files to Git repositories.
+- **Date normalization**: Adjusts any dates less than a week ago to read "less than a week ago" for consistency.
 
-## Installation
+## Usage
+
+Run the bulk scraper from this repository's root:
+
+```
+python main.py
+```
+
+- Walks the current directory that the repository is placed in to find projects containing the configured reviews subpath and URL file.
+- For each match, scrapes the most recent reviews and writes/updates that project's `output.json`.
+- With the `--git` flag, automatically commits and pushes changes to any git repositories found.
+- If you only place a single `reviews/url.txt` in this repo, it will behave like a single-project run.
+
+### Installation
 
 - Install the latest version of Google Chrome.
 - Install Python packages from `requirements.txt` (Python 3.9 is required).
+
+
+### Adding URLs
+
+1. In each project's reviews folder, create the URL file (default `reviews/url.txt`).
+2. In Google Maps, open the place/POI, click the reviews count, then copy the resulting URL.
+3. Paste that URL into the project's `url.txt`.
+
+### Git Integration
+
+When using the `--git` flag, the scraper will:
+- Check if each project directory is a git repository
+- Add the updated `output.json` files to the staging area
+- Commit changes with a timestamped message
+- Push commits to the remote repository
+
+This is useful for automatically updating review data across multiple project repositories.
 
 ## Project layout and conventions
 
@@ -43,48 +71,30 @@ root/
 
 You can change the reviews folder name and URL filename. See the “Configuration” section below.
 
-## Usage
-
-Run the bulk scraper from this repository’s root:
-
-```
-python main.py
-```
-
-Behavior:
-
-- Walks the current directory to find projects containing the configured reviews subpath and URL file.
-- For each match, scrapes the most recent reviews and writes/updates that project’s `output.json`.
-- If you only place a single `reviews/url.txt` in this repo, it will behave like a single-project run.
-
-### Adding URLs
-
-1. In each project’s reviews folder, create the URL file (default `reviews/url.txt`).
-2. In Google Maps, open the place/POI, click the reviews count, then copy the resulting URL.
-3. Paste that URL into the project’s `url.txt`.
-
 ## CLI reference
 
 ```
-usage: main.py [-h] [-p PATH] [-n NUM] [-i INPUT] [-o OUTPUT] [-s SORT] [-d]
+usage: main.py [-h] [-p PATH] [-n NUM] [-i INPUT] [-o OUTPUT] [-s SORT] [-g] [-d]
 
 Google Maps reviews scraper.
 
 options:
   -h, --help            show this help message and exit
-  -p PATH, --path PATH  path to the reviews folder (default: frontend/src/reviews)
-  -n NUM, --num NUM     number of reviews to scrape (default: 20)
+  -p PATH, --path PATH  path to the reviews folder (default: reviews)
+  -n NUM, --num NUM     number of reviews to scrape (default: 50)
   -i INPUT, --input INPUT
                         input file containing URL (default: url.txt)
   -o OUTPUT, --output OUTPUT
                         output file for scraped reviews (default: output.json)
   -s SORT, --sort SORT  most_relevant, newest, highest_rating or lowest_rating (default: newest)
+  -g, --git             use git to add, commit, and push (re)generated output files
   -d, --debug           run scraper using browser graphical interface
 ```
 
 - The `--path` value is treated as a relative subpath to search for in each discovered project while scanning from the current directory. Put your `url.txt` inside that folder per project.
 - The `--input` filename is looked for within the `--path` folder in each project.
 - The `--output` file is written next to the input file for each project.
+- The `--git` flag enables automatic git operations for projects that are git repositories.
 
 ### Examples
 
@@ -100,10 +110,10 @@ Use a different reviews folder path (e.g., `src/reviews`) across projects:
 python main.py -p src/reviews
 ```
 
-Scrape 50 newest reviews and write to a custom filename:
+Scrape 100 newest reviews with git integration to automatically commit and push changes:
 
 ```
-python main.py -n 50 -s newest -o reviews-latest.json
+python main.py -n 100 -s newest --git
 ```
 
 ## Credits

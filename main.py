@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 from termcolor import colored
-from git import Repo
+from git import Repo # type: ignore
 
 def scrape_reviews(input_path, output_path, num_reviews, sort_by, debug):
     # collect all reviews to write as a single JSON array
