@@ -1,29 +1,20 @@
-# -*- coding: utf-8 -*-
-import itertools
 import logging
-import re
 import time
 import traceback
 from datetime import datetime
 
-import numpy as np
-import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ChromeOptions as Options
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 
 GM_WEBPAGE = 'https://www.google.com/maps/'
 MAX_WAIT = 10
 MAX_RETRY = 5
-MAX_SCROLLS = 40
 
 class GoogleMapsScraper:
 
@@ -78,54 +69,6 @@ class GoogleMapsScraper:
 
         return 0
 
-    def get_places(self, keyword_list=None):
-
-        df_places = pd.DataFrame()
-        search_point_url_list = self._gen_search_points_from_square(keyword_list=keyword_list)
-
-        for i, search_point_url in enumerate(search_point_url_list):
-            print(search_point_url)
-
-            if (i+1) % 10 == 0:
-                print(f"{i}/{len(search_point_url_list)}")
-                df_places = df_places[['search_point_url', 'href', 'name', 'rating', 'num_reviews', 'close_time', 'other']]
-                df_places.to_csv('output/places_wax.csv', index=False)
-
-
-            try:
-                self.driver.get(search_point_url)
-            except NoSuchElementException:
-                self.driver.quit()
-                self.driver = self.__get_driver()
-                self.driver.get(search_point_url)
-
-            # scroll to load all (20) places into the page
-            scrollable_div = self.driver.find_element(By.CSS_SELECTOR,
-                "div.m6QErb.DxyBCb.kA9KIf.dS8AEf.ecceSd > div[aria-label*='Results for']")
-            for i in range(10):
-                self.driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-
-            # Get places names and href
-            time.sleep(2)
-            response = BeautifulSoup(self.driver.page_source, 'html.parser')
-            div_places = response.select('div[jsaction] > a[href]')
-
-            for div_place in div_places:
-                place_info = {
-                    'search_point_url': search_point_url.replace('https://www.google.com/maps/search/', ''),
-                    'href': div_place['href'],
-                    'name': div_place['aria-label']
-                }
-
-                df_places = df_places.append(place_info, ignore_index=True)
-
-            # TODO: implement click to handle > 20 places
-
-        df_places = df_places[['search_point_url', 'href', 'name']]
-        df_places.to_csv('output/places_wax.csv', index=False)
-
-
-
     def get_reviews(self, offset):
 
         # scroll to load reviews
@@ -148,23 +91,6 @@ class GoogleMapsScraper:
                 parsed_reviews.append(r)
 
         return parsed_reviews
-
-
-
-    # need to use different url wrt reviews one to have all info
-    def get_account(self, url):
-
-        self.driver.get(url)
-        self.__click_on_cookie_agreement()
-
-        # ajax call also for this section
-        time.sleep(2)
-
-        resp = BeautifulSoup(self.driver.page_source, 'html.parser')
-
-        place_data = self.__parse_place(resp, url)
-
-        return place_data
 
 
     def __parse(self, review):
@@ -228,99 +154,6 @@ class GoogleMapsScraper:
         item['url_user'] = user_url
 
         return item
-
-
-    def __parse_place(self, response, url):
-
-        place = {}
-
-        try:
-            place['name'] = response.find('h1', class_='DUwDvf fontHeadlineLarge').text.strip()
-        except Exception as e:
-            place['name'] = None
-
-        try:
-            place['overall_rating'] = float(response.find('div', class_='F7nice ').find('span', class_='ceNzKf')['aria-label'].split(' ')[1])
-        except Exception as e:
-            place['overall_rating'] = None
-
-        try:
-            place['n_reviews'] = int(response.find('div', class_='F7nice ').text.split('(')[1].replace(',', '').replace(')', ''))
-        except Exception as e:
-            place['n_reviews'] = 0
-
-        try:
-            place['n_photos'] = int(response.find('div', class_='YkuOqf').text.replace('.', '').replace(',','').split(' ')[0])
-        except Exception as e:
-            place['n_photos'] = 0
-
-        try:
-            place['category'] = response.find('button', jsaction='pane.rating.category').text.strip()
-        except Exception as e:
-            place['category'] = None
-
-        try:
-            place['description'] = response.find('div', class_='PYvSYb').text.strip()
-        except Exception as e:
-            place['description'] = None
-
-        b_list = response.find_all('div', class_='Io6YTe fontBodyMedium')
-        try:
-            place['address'] = b_list[0].text
-        except Exception as e:
-            place['address'] = None
-
-        try:
-            place['website'] = b_list[1].text
-        except Exception as e:
-            place['website'] = None
-
-        try:
-            place['phone_number'] = b_list[2].text
-        except Exception as e:
-            place['phone_number'] = None
-    
-        try:
-            place['plus_code'] = b_list[3].text
-        except Exception as e:
-            place['plus_code'] = None
-
-        try:
-            place['opening_hours'] = response.find('div', class_='t39EBf GUrTXd')['aria-label'].replace('\u202f', ' ')
-        except:
-            place['opening_hours'] = None
-
-        place['url'] = url
-
-        lat, long, z = url.split('/')[6].split(',')
-        place['lat'] = lat[1:]
-        place['long'] = long
-
-        return place
-
-
-    def _gen_search_points_from_square(self, keyword_list=None):
-        # TODO: Generate search points from corners of square
-
-        keyword_list = [] if keyword_list is None else keyword_list
-
-        square_points = pd.read_csv('input/square_points.csv')
-
-        cities = square_points['city'].unique()
-
-        search_urls = []
-
-        for city in cities:
-
-            df_aux = square_points[square_points['city'] == city]
-            latitudes = df_aux['latitude'].unique()
-            longitudes = df_aux['longitude'].unique()
-            coordinates_list = list(itertools.product(latitudes, longitudes, keyword_list))
-
-            search_urls += [f"https://www.google.com/maps/search/{coordinates[2]}/@{str(coordinates[1])},{str(coordinates[0])},{str(15)}z"
-             for coordinates in coordinates_list]
-
-        return search_urls
 
 
     # expand review description

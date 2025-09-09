@@ -1,6 +1,6 @@
 # Bulk Google Reviews
 
-Scrapes the most recent Google Maps reviews in bulk. Point it at a root folder, and it will discover projects, read a Google Maps reviews URL from each project, and write out a fresh `output.json` per project.
+Highly configurable utility to scrape the most recent Google Maps reviews in bulk. Point it at a root folder, and it will discover projects, read a Google Maps reviews URL from each project, and write out a fresh `output.json` per project.
 
 ## TODO
 - Git commit/push for detected repos
@@ -53,7 +53,7 @@ python main.py
 
 Behavior:
 
-- Recursively walks the current directory to find projects containing the configured reviews subpath and URL file.
+- Walks the current directory to find projects containing the configured reviews subpath and URL file.
 - For each match, scrapes the most recent reviews and writes/updates that project’s `output.json`.
 - If you only place a single `reviews/url.txt` in this repo, it will behave like a single-project run.
 
@@ -82,7 +82,7 @@ options:
   -d, --debug           run scraper using browser graphical interface
 ```
 
-- The `--path` value is treated as a relative subpath to search for in each discovered project while scanning recursively from the current directory. Put your `url.txt` inside that folder per project.
+- The `--path` value is treated as a relative subpath to search for in each discovered project while scanning from the current directory. Put your `url.txt` inside that folder per project.
 - The `--input` filename is looked for within the `--path` folder in each project.
 - The `--output` file is written next to the input file for each project.
 
@@ -94,7 +94,7 @@ Run with all defaults (scans for `reviews/url.txt`):
 python main.py
 ```
 
-Use a different reviews folder name (e.g., `src/reviews`) across projects:
+Use a different reviews folder path (e.g., `src/reviews`) across projects:
 
 ```
 python main.py -p src/reviews
