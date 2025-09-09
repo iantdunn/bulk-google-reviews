@@ -5,7 +5,7 @@ import json
 import os
 from termcolor import colored
 
-def scrape_reviews(input_path, output_path, num_reviews = 20, sort_by = 'newest', debug = False):
+def scrape_reviews(input_path, output_path, num_reviews, sort_by, debug):
     # collect all reviews to write as a single JSON array
     results = []
 
@@ -51,8 +51,9 @@ def scrape_reviews(input_path, output_path, num_reviews = 20, sort_by = 'newest'
         # current date could be "18 hours ago" or "3 days ago"
         relative_date = item.get('relative_date')
         if relative_date and isinstance(relative_date, str):
-            if "hours" in relative_date or "days" in relative_date:
+            if any(x in relative_date for x in ("second", "minute", "hour", "day")):
                 item['relative_date'] = "less than a week ago"
+                
     print(colored('    Processed review data', 'blue'))
 
     # only write JSON to file if we have reviews
@@ -66,7 +67,7 @@ def scrape_reviews(input_path, output_path, num_reviews = 20, sort_by = 'newest'
         print(colored('    No reviews found, not writing output file', 'yellow'))
         exit(0)
 
-def main(path, num_reviews = 20, sort_by = 'newest', debug = False, input_file = 'url.txt', output_file = 'output.json'):
+def main(path, num_reviews, sort_by, debug, input_file, output_file):
     # Create relative path object from path given
     relative_path = os.path.relpath(path)
 
@@ -84,7 +85,7 @@ def main(path, num_reviews = 20, sort_by = 'newest', debug = False, input_file =
         # Make sure it exists
         if not os.path.exists(scrape_path):
             print(colored(f'[SKIPPED]  {folder}', 'yellow'))
-            print(f'    {scrape_path} not found')
+            print(f'    {scrape_path} not found\n')
             continue
 
         input_path = os.path.join(scrape_path, input_file)
@@ -100,7 +101,7 @@ def main(path, num_reviews = 20, sort_by = 'newest', debug = False, input_file =
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Google Maps reviews scraper.')
-    parser.add_argument('-p', '--path', type=str, default='frontend/src/reviews', help='path to the reviews folder (default: frontend/src/reviews)')
+    parser.add_argument('-p', '--path', type=str, default='reviews', help='path to the reviews folder (default: reviews)')
     parser.add_argument('-n', '--num', type=int, default=20, help='number of reviews to scrape (default: 20)')
     parser.add_argument('-i', '--input', type=str, default='url.txt', help='input file containing URL (default: url.txt)')
     parser.add_argument('-o', '--output', type=str, default='output.json', help='output file for scraped reviews (default: output.json)')
