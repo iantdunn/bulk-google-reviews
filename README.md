@@ -7,7 +7,7 @@ Highly configurable utility to scrape the recent Google Maps reviews in bulk.
 - **Bulk discovery**: Scans surrounding directories to find projects in need of review scraping.
 - **Configurable layout**: Supports customizable reviews folder, input URL filename, and output filename.
 - **Per-project runs**: Reads one URL per project and writes `output.json` alongside it.
-- **Git integration**: Automatically add, commit, and push generated output files to Git repositories.
+- **Git integration**: Automatically pull from and push generated output files to Git repositories.
 - **Date normalization**: Adjusts any dates less than a week ago to read "less than a week ago" for consistency.
 
 ## Usage
@@ -21,7 +21,8 @@ python main.py
 - Walks the current directory that the repository is placed in to find projects containing the configured reviews subpath and URL file.
   - Placing a single `reviews/url.txt` in this repo will act as its own project.
 - For each match, scrapes the most recent reviews and writes/updates that project's `output.json`.
-  - With the `--git` flag, automatically commits and pushes changes to any git repositories found.
+  - With the `--git` flag, automatically pulls from and pushes changes to any git repositories found.
+    - **Note:** There should not be any unstaged changes in the repository. This will cause issues with the rebase.
 
 ### Installation
 

@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 from termcolor import colored
-from git import Repo # type: ignore
+from git_operations import git_pull, git_push
 
 def scrape_reviews(input_path, output_path, num_reviews, sort_by, debug):
     # collect all reviews to write as a single JSON array
@@ -68,31 +68,6 @@ def scrape_reviews(input_path, output_path, num_reviews, sort_by, debug):
         print(colored('    No reviews found, not writing output file', 'yellow'))
         return False
 
-def git_push(git_root_abs, output_path, commit_message="Update Google Maps reviews"):
-    relative_output_path = os.path.relpath(output_path, git_root_abs)
-    git_path = os.path.join(git_root_abs, '.git')
-
-    if not os.path.exists(git_path):
-        print(colored(f'    No .git directory found in {git_root_abs}, skipping git operations', 'yellow'))
-        return
-
-    print(colored(f'    Git repository found in {git_root_abs}', 'magenta'))
-    
-    try:
-        # Git add
-        repo = Repo(git_root_abs)
-        repo.index.add([relative_output_path])
-
-        # Git commit
-        commit = repo.index.commit(commit_message)
-        print(colored(f'    Created commit {commit.hexsha[:8]} on branch {repo.active_branch.name}', 'magenta'))
-
-        # Git push
-        origin = repo.remote(name='origin')
-        origin.push()
-        print(colored(f'    Pushed changes to remote repository {origin.url}', 'magenta'))
-    except Exception as e:
-        print(colored(f'    Git operation failed: {e}', 'red'))
 
 def main(path, num_reviews, sort_by, debug, git, input_file, output_file):
     # Create relative path object from path given
@@ -129,6 +104,9 @@ def main(path, num_reviews, sort_by, debug, git, input_file, output_file):
 
         print(colored(f'[SCRAPING] {folder}', 'green'))
 
+        if git:
+            git_pull(project_path_abs)
+
         try:
             success = scrape_reviews(num_reviews=num_reviews, sort_by=sort_by, debug=debug, input_path=input_path, output_path=output_path)
         except Exception as e:
@@ -139,6 +117,7 @@ def main(path, num_reviews, sort_by, debug, git, input_file, output_file):
             git_push(project_path_abs, output_path)
 
         print()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Google Maps reviews scraper.')
