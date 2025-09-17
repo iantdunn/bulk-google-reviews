@@ -107,6 +107,7 @@ def main(path, num_reviews, sort_by, debug, git, input_file, output_file):
         if git:
             git_pull(project_path_abs)
 
+        success = False
         try:
             success = scrape_reviews(num_reviews=num_reviews, sort_by=sort_by, debug=debug, input_path=input_path, output_path=output_path)
         except Exception as e:
